@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_dosen_prodi"
+            android:icon="@drawable/ic_action_users"
+            android:title="Daftar Dosen Prodi" />
+        <item
+            android:id="@+id/nav_dosen_domisili"
+            android:icon="@drawable/ic_action_users"
+            android:title="Daftar Dosen Domisili" />
+
+    </group>
+
+    <item android:title="Communicate">
+        <menu>
+            <item
+                android:id="@+id/nav_pengaturan"
+                android:icon="@drawable/ic_action_gear"
+                android:title="Pengaturan" />
+            <item
+                android:id="@+id/nav_about"
+                android:icon="@drawable/ic_action_info"
+                android:title="About" />
+        </menu>
+    </item>
+
+</menu>
