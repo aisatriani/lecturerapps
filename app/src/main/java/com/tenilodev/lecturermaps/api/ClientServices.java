@@ -1,5 +1,6 @@
 package com.tenilodev.lecturermaps.api;
 
+import com.tenilodev.lecturermaps.model.DirectionResults;
 import com.tenilodev.lecturermaps.model.Dosen;
 import com.tenilodev.lecturermaps.model.Fakultas;
 import com.tenilodev.lecturermaps.model.Mahasiswa;
@@ -12,6 +13,7 @@ import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 /**
  * Created by azisa on 12/12/2016.
@@ -31,5 +33,11 @@ public interface ClientServices {
 
     @GET("dosen/{kdprodi}/prodi")
     public Call<List<Dosen>> getDosenByProdi(@Path("kdprodi") String kdprodi);
+
+    @GET("dosen/{domisili}/domisili")
+    public Call<List<Dosen>> getDosenByDomisili(@Path("domisili") String domisili);
+
+    @GET("/maps/api/directions/json")
+    public Call<DirectionResults> getDirection(@Query("origin") String origin,@Query("destination") String destination);
 
 }

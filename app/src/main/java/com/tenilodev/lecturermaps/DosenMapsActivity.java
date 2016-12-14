@@ -1,41 +1,201 @@
 package com.tenilodev.lecturermaps;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.support.design.widget.AppBarLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v4.widget.NestedScrollView;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
+import com.tenilodev.lecturermaps.api.ClientServices;
+import com.tenilodev.lecturermaps.api.GoogleApiGenerator;
+import com.tenilodev.lecturermaps.model.DirectionResults;
 import com.tenilodev.lecturermaps.model.Dosen;
+import com.tenilodev.lecturermaps.utils.RouteDecode;
 
-public class DosenMapsActivity extends FragmentActivity implements OnMapReadyCallback {
+import java.util.ArrayList;
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+public class DosenMapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
     private Dosen dosen;
+    private NestedScrollView scrollv;
+    private AppBarLayout appbar;
+    private boolean isExpanded;
+    private TextView textNamaDosen, textTempatLahir, textTglLahir, textStatusDosen, textStatusKerja, textJabatanAkademik, textEmail;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_dosen_maps);
+        setContentView(R.layout.activity_maps_details);
 
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        appbar = (AppBarLayout)findViewById(R.id.app_bar);
+
+        isExpanded = true;
+
+
+        initView();
         handleIntent(getIntent());
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        toolbar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(isExpanded) {
+                    appbar.setExpanded(false);
+                    isExpanded = false;
+                }else{
+                    appbar.setExpanded(true);
+                    isExpanded = true;
+                }
+            }
+        });
 
+
+    }
+
+    private void initView() {
+        textNamaDosen = (TextView) findViewById(R.id.nama_dosen);
+        textTempatLahir = (TextView) findViewById(R.id.text_tempat_lahir);
+        textTglLahir = (TextView) findViewById(R.id.text_tgl_lahir);
+        textStatusDosen = (TextView) findViewById(R.id.text_status_dosen);
+        textStatusKerja = (TextView) findViewById(R.id.text_status_kerja);
+        textJabatanAkademik = (TextView) findViewById(R.id.text_jabatan_akademik);
+        textEmail = (TextView) findViewById(R.id.text_email);
     }
 
     private void handleIntent(Intent intent) {
-        dosen = (Dosen)intent.getSerializableExtra("dosen");
-        System.out.println(dosen.getNAMA());
+        dosen = (Dosen) intent.getSerializableExtra("dosen");
+        setTitle(dosen.getNAMA());
+
+        textNamaDosen.setText(dosen.getNAMA());
+        textTempatLahir.setText(dosen.getTEMPAT_LAHIR());
+        textTglLahir.setText(dosen.getTANGGAL_LAHIR());
+        textStatusDosen.setText(dosen.getSTATUSDOSEN());
+        textStatusKerja.setText(dosen.getSTATUSKERJA());
+        textJabatanAkademik.setText(dosen.getJABATANKADEMIK());
+        textEmail.setText(dosen.getEMAIL());
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.maps, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(item.getItemId() == R.id.action_direction){
+            actionDirection();
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void actionDirection() {
+        //0.547451, 123.086840
+        final ProgressDialog pd = new ProgressDialog(this);
+        pd.setMessage("Memuat data");
+        pd.setCanceledOnTouchOutside(false);
+        pd.show();
+
+        ClientServices services = GoogleApiGenerator.createService(ClientServices.class);
+        String strDestination = String.format("%f,%f", dosen.getLATITUDE(), dosen.getLONGITUDE());
+        Call<DirectionResults> call = services.getDirection("0.547451, 123.086840", strDestination);
+        call.enqueue(new Callback<DirectionResults>() {
+            @Override
+            public void onResponse(Call<DirectionResults> call, Response<DirectionResults> response) {
+                pd.dismiss();
+                if(response.isSuccessful()){
+                    DirectionResults directionResults = response.body();
+                    ArrayList<LatLng> routelist = new ArrayList<LatLng>();
+                    if(directionResults.getRoutes().size()>0){
+                        ArrayList<LatLng> decodelist;
+                        DirectionResults.Route routeA = directionResults.getRoutes().get(0);
+                        //Log.i("zacharia", "Legs length : "+routeA.getLegs().size());
+                        if(routeA.getLegs().size()>0){
+                            List<DirectionResults.Steps> steps= routeA.getLegs().get(0).getSteps();
+//                            Log.i("zacharia","Steps size :"+steps.size());
+                            DirectionResults.Steps step;
+                            DirectionResults.Location location;
+                            String polyline;
+                            for(int i=0 ; i<steps.size();i++){
+                                step = steps.get(i);
+                                location =step.getStart_location();
+                                routelist.add(new LatLng(location.getLat(), location.getLng()));
+                                polyline = step.getPolyline().getPoints();
+                                decodelist = RouteDecode.decodePoly(polyline);
+                                routelist.addAll(decodelist);
+                                location =step.getEnd_location();
+                                routelist.add(new LatLng(location.getLat() ,location.getLng()));
+                            }
+                        }
+                    }
+                    if(routelist.size()>0){
+                        PolylineOptions rectLine = new PolylineOptions().width(10).color(
+                                Color.RED);
+
+                        for (int i = 0; i < routelist.size(); i++) {
+                            rectLine.add(routelist.get(i));
+                        }
+                        // Adding route on the map
+                        mMap.addPolyline(rectLine);
+                        mMap.addMarker(new MarkerOptions()
+                                .position(new LatLng(0.547451, 123.086840))
+                                .title("My location")
+                        );
+
+                        CameraPosition cameraPosition = new CameraPosition.Builder()
+                                .target(midPoint(0.547451, 123.086840, dosen.getLATITUDE(), dosen.getLONGITUDE()))
+                                .zoom(14)
+                                .bearing((float) angleBteweenCoordinate(0.547451, 123.086840, dosen.getLATITUDE(), dosen.getLONGITUDE())).build();
+
+                        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+
+                    }
+                }else{
+
+                }
+            }
+
+            @Override
+            public void onFailure(Call<DirectionResults> call, Throwable t) {
+
+            }
+        });
+    }
 
     /**
      * Manipulates the map once available.
@@ -49,11 +209,54 @@ public class DosenMapsActivity extends FragmentActivity implements OnMapReadyCal
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        mMap.getUiSettings().setMyLocationButtonEnabled(true);
+        mMap.getUiSettings().setZoomControlsEnabled(true);
+        mMap.getUiSettings().setZoomGesturesEnabled(true);
 
         // Add a marker in Sydney and move the camera
         LatLng latLng = new LatLng(dosen.getLATITUDE(), dosen.getLONGITUDE());
-        mMap.addMarker(new MarkerOptions().position(latLng).title(dosen.getNAMA()));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng,15));
+        Marker markerDosen = mMap.addMarker(new MarkerOptions()
+                .position(latLng).title(dosen.getNAMA())
+                .icon(BitmapDescriptorFactory.fromResource(R.drawable.home))
+        );
+        markerDosen.showInfoWindow();
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
 
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        mMap.setMyLocationEnabled(true);
+
+    }
+
+    private LatLng midPoint(double lat1, double long1, double lat2,double long2)
+    {
+
+        return new LatLng((lat1+lat2)/2, (long1+long2)/2);
+
+    }
+
+    private double angleBteweenCoordinate(double lat1, double long1, double lat2,  double long2) {
+
+        double dLon = (long2 - long1);
+
+        double y = Math.sin(dLon) * Math.cos(lat2);
+        double x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1)
+                * Math.cos(lat2) * Math.cos(dLon);
+
+        double brng = Math.atan2(y, x);
+
+        brng = Math.toDegrees(brng);
+        brng = (brng + 360) % 360;
+        brng = 360 - brng;
+
+        return brng;
     }
 }

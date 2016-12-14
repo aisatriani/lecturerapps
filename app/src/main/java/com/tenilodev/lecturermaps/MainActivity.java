@@ -19,6 +19,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.tenilodev.lecturermaps.api.ApiGenerator;
@@ -118,6 +119,10 @@ public class MainActivity extends AppCompatActivity
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
+        mMap.getUiSettings().setMyLocationButtonEnabled(true);
+        mMap.getUiSettings().setZoomControlsEnabled(true);
+        mMap.getUiSettings().setZoomGesturesEnabled(true);
+
         // Add a marker in Sydney and move the camera
         LatLng gorontalo = new LatLng(0.553042, 123.063151);
         //mMap.addMarker(new MarkerOptions().position(gorontalo).title("Marker in Sydney"));
@@ -140,7 +145,10 @@ public class MainActivity extends AppCompatActivity
                 if(response.isSuccessful()){
                     for (Dosen d :  response.body()) {
                         LatLng ll = new LatLng(d.getLATITUDE(),d.getLONGITUDE());
-                        mMap.addMarker(new MarkerOptions().position(ll).title(d.getNAMA()));
+                        mMap.addMarker(new MarkerOptions()
+                                .position(ll)
+                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.home))
+                                .title(d.getNAMA()));
                     }
 
                 }else{
