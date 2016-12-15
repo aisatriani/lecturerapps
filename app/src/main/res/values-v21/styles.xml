@@ -6,4 +6,27 @@
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
+
+    <style name="AppTheme.Dark" parent="Theme.AppCompat.NoActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+
+        <item name="android:windowBackground">@color/colorPrimary</item>
+
+        <item name="colorControlNormal">#CCCCCC</item>
+        <item name="colorControlActivated">@color/md_white_1000</item>
+        <item name="colorControlHighlight">@color/md_white_1000</item>
+        <item name="android:textColorHint">#CCCCCC</item>
+
+        <item name="colorButtonNormal">#CC1D1D</item>
+        <item name="android:colorButtonNormal">#CC1D1D</item>
+    </style>
+
+    <style name="AppTheme.Dark.Dialog" parent="Theme.AppCompat.Dialog">
+        <item name="colorAccent">@color/md_white_1000</item>
+        <item name="android:textColorPrimary">#CCCCCC</item>
+        <item name="android:background">@color/colorPrimary</item>
+    </style>
+
 </resources>
