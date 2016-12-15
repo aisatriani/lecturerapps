@@ -4,7 +4,9 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.location.Location;
 import android.support.design.widget.AppBarLayout;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -55,6 +57,8 @@ public class DosenMapsActivity extends AppCompatActivity implements OnMapReadyCa
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps_details);
 
+        mLatLng = Pref.getInstance(DosenMapsActivity.this).getMyLatLng();
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -84,7 +88,7 @@ public class DosenMapsActivity extends AppCompatActivity implements OnMapReadyCa
             }
         });
 
-        mLatLng = Pref.getInstance(DosenMapsActivity.this).getMyLatLng();
+
 
 
     }
@@ -135,8 +139,9 @@ public class DosenMapsActivity extends AppCompatActivity implements OnMapReadyCa
         pd.show();
 
         ClientServices services = GoogleApiGenerator.createService(ClientServices.class);
-        String strDestination = String.format("%f,%f", dosen.getLATITUDE(), dosen.getLONGITUDE());
-        Call<DirectionResults> call = services.getDirection("0.547451, 123.086840", strDestination);
+        String strDestination = String.format("%s,%s", dosen.getLATITUDE(), dosen.getLONGITUDE());
+        String source = String.format("%s,%s", mLatLng.latitude, mLatLng.longitude);
+        Call<DirectionResults> call = services.getDirection(source, strDestination);
         call.enqueue(new Callback<DirectionResults>() {
             @Override
             public void onResponse(Call<DirectionResults> call, Response<DirectionResults> response) {
@@ -183,7 +188,7 @@ public class DosenMapsActivity extends AppCompatActivity implements OnMapReadyCa
 
                         CameraPosition cameraPosition = new CameraPosition.Builder()
                                 .target(midPoint(mLatLng.latitude, mLatLng.longitude, dosen.getLATITUDE(), dosen.getLONGITUDE()))
-                                .zoom(14)
+                                .zoom(13)
                                 .bearing((float) angleBteweenCoordinate(mLatLng.latitude, mLatLng.longitude, dosen.getLATITUDE(), dosen.getLONGITUDE())).build();
 
                         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
@@ -213,6 +218,21 @@ public class DosenMapsActivity extends AppCompatActivity implements OnMapReadyCa
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Snackbar.make(getWindow().getDecorView().getRootView(), "Gagal mendapatkan permission GPS", Snackbar.LENGTH_INDEFINITE).show();
+            return;
+        }
+        mMap.setMyLocationEnabled(true);
+
+        mMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
+            @Override
+            public void onMyLocationChange(Location location) {
+                Pref.getInstance(DosenMapsActivity.this).storeMyPosition(location.getLatitude(), location.getLongitude());
+                System.out.println("STORE LOCATION");
+            }
+        });
+
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
         mMap.getUiSettings().setZoomControlsEnabled(true);
         mMap.getUiSettings().setZoomGesturesEnabled(true);
@@ -226,17 +246,7 @@ public class DosenMapsActivity extends AppCompatActivity implements OnMapReadyCa
         markerDosen.showInfoWindow();
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
 
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        mMap.setMyLocationEnabled(true);
+
 
     }
 

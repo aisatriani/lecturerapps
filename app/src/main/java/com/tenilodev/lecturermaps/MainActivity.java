@@ -24,6 +24,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -31,13 +32,17 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.tenilodev.lecturermaps.api.ApiGenerator;
 import com.tenilodev.lecturermaps.api.ClientServices;
 import com.tenilodev.lecturermaps.model.Dosen;
 import com.tenilodev.lecturermaps.model.Mahasiswa;
 
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -50,6 +55,7 @@ public class MainActivity extends AppCompatActivity
     private GoogleMap mMap;
     private NavigationView navigationView;
     private Mahasiswa currentMahasiswa;
+    private HashMap<Dosen, Marker> markerHashMap = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -149,9 +155,11 @@ public class MainActivity extends AppCompatActivity
             Intent intent = new Intent(this, DomisiliActivity.class);
             startActivity(intent);
         } else if (id == R.id.nav_pengaturan) {
-
+            Intent intent = new Intent(this, PengaturanActivity.class);
+            startActivity(intent);
         } else if (id == R.id.nav_about) {
-
+            Intent intent = new Intent(this, AboutActivity.class);
+            startActivity(intent);
         } else if (id == R.id.nav_logout) {
             doActionLogout();
         }
@@ -210,6 +218,22 @@ public class MainActivity extends AppCompatActivity
         mMap.getUiSettings().setZoomControlsEnabled(true);
         mMap.getUiSettings().setZoomGesturesEnabled(true);
 
+        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+
+                for(Map.Entry<Dosen, Marker> entry : markerHashMap.entrySet()){
+                    if(entry.getValue().equals(marker)){
+                        //Toast.makeText(MainActivity.this, entry.getValue().getTitle(), Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(MainActivity.this, DosenMapsActivity.class);
+                        intent.putExtra("dosen",entry.getKey());
+                        startActivity(intent);
+                    }
+                }
+                return true;
+            }
+        });
+
 
     }
 
@@ -225,12 +249,17 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onResponse(Call<List<Dosen>> call, Response<List<Dosen>> response) {
                 if (response.isSuccessful()) {
-                    for (Dosen d : response.body()) {
-                        LatLng ll = new LatLng(d.getLATITUDE(), d.getLONGITUDE());
-                        mMap.addMarker(new MarkerOptions()
+                    //for (Dosen d : response.body()) {
+                    for(int i = 0; i < response.body().size(); i++){
+
+                        LatLng ll = new LatLng(response.body().get(i).getLATITUDE(), response.body().get(i).getLONGITUDE());
+
+                        Marker marker = mMap.addMarker(new MarkerOptions()
                                 .position(ll)
                                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.home))
-                                .title(d.getNAMA()));
+                                .title(response.body().get(i).getNAMA()));
+
+                        markerHashMap.put(response.body().get(i),marker);
                     }
 
                 } else {

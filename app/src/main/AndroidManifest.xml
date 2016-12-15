@@ -7,9 +7,9 @@
          Google Maps Android API v2, but you must specify either coarse or fine
          location permissions for the 'MyLocation' functionality. 
     -->
-    <uses-permission android:name="android.permission.LOCATION_HARDWARE"/>
+    <uses-permission android:name="android.permission.LOCATION_HARDWARE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
@@ -28,9 +28,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <meta-data android:name="android.app.searchable"
+            <meta-data
+                android:name="android.app.searchable"
                 android:resource="@xml/searchable" />
-
         </activity>
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
@@ -47,10 +47,11 @@
         <activity
             android:name=".MapsActivity"
             android:label="@string/title_activity_maps" />
-        <activity android:name=".LoginActivity"
+        <activity
+            android:name=".LoginActivity"
             android:exported="true"
             android:theme="@style/AppTheme.Dark"
-            android:windowSoftInputMode="adjustPan|stateHidden"/>
+            android:windowSoftInputMode="adjustPan|stateHidden" />
         <activity
             android:name=".ProdiActivity"
             android:label="@string/title_activity_prodi"
@@ -61,15 +62,24 @@
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".DosenMapsActivity"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:label="@string/title_activity_dosen_maps" />
+            android:label="@string/title_activity_dosen_maps"
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".DomisiliActivity"
             android:label="@string/title_activity_domisili"
-            android:theme="@style/AppTheme.NoActionBar"/>
-        <activity android:name=".DosenDomisiliActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".DosenDomisiliActivity"
             android:label="Daftar Dosen"
-            android:theme="@style/AppTheme.NoActionBar"/>
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".AboutActivity"
+            android:exported="true"
+            android:label="@string/title_activity_about"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".PengaturanActivity"
+            android:label="@string/title_activity_pengaturan"></activity>
     </application>
 
 </manifest>
