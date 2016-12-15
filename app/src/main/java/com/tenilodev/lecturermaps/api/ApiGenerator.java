@@ -5,6 +5,7 @@ import com.tenilodev.lecturermaps.Config;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.Interceptor;
 import okhttp3.MediaType;
@@ -43,6 +44,9 @@ public class ApiGenerator {
             httpClient = new OkHttpClient.Builder();
         }
 
+        httpClient.readTimeout(60, TimeUnit.SECONDS);
+        httpClient.writeTimeout(60, TimeUnit.SECONDS);
+
         httpClient.addInterceptor(loggingInterceptor());
         httpClient.addInterceptor(new Interceptor() {
             @Override
@@ -61,6 +65,7 @@ public class ApiGenerator {
         builder.baseUrl(API_BASE_URL);
         builder.addConverterFactory(new ToStringConverterFactory());
         builder.addConverterFactory(GsonConverterFactory.create());
+
         builder.client(httpClient.build());
 
         if (retrofit == null) {
