@@ -23,7 +23,7 @@ public interface ClientServices {
 
     @FormUrlEncoded
     @POST("loginmahasiswa")
-    public Call<ApiResponse<Mahasiswa>> login(@Field("nim") String nim, @Field("pwd") String pwd);
+    public Call<ApiResponse<Mahasiswa>> loginMahasiswa(@Field("nim") String nim, @Field("pwd") String pwd);
 
     @GET("prodi")
     public Call<ApiResponse<List<Fakultas>>> getAllProdi();

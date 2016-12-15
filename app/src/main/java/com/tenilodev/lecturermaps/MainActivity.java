@@ -6,6 +6,7 @@ import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -22,6 +23,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -33,6 +35,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.tenilodev.lecturermaps.api.ApiGenerator;
 import com.tenilodev.lecturermaps.api.ClientServices;
 import com.tenilodev.lecturermaps.model.Dosen;
+import com.tenilodev.lecturermaps.model.Mahasiswa;
 
 import java.util.List;
 
@@ -45,6 +48,8 @@ public class MainActivity extends AppCompatActivity
 
     private static final int MY_LOCATION_REQUEST_CODE = 200;
     private GoogleMap mMap;
+    private NavigationView navigationView;
+    private Mahasiswa currentMahasiswa;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,18 +58,37 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        if (!Pref.getInstance(this).isLoginIn()) {
+            Intent intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
+            this.finish();
+            return;
+        }
+
+        currentMahasiswa = Pref.getInstance(this).getDataMahasiswa();
+
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        setContentHeader();
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+    }
+
+    private void setContentHeader() {
+       TextView textHeader = (TextView) navigationView.getHeaderView(0).findViewById(R.id.header_name);
+       TextView textNim = (TextView) navigationView.getHeaderView(0).findViewById(R.id.header_nim);
+
+        textHeader.setText(currentMahasiswa.getNAMA());
+        textNim.setText(Pref.getInstance(this).getNim());
     }
 
     @Override
@@ -128,11 +152,19 @@ public class MainActivity extends AppCompatActivity
 
         } else if (id == R.id.nav_about) {
 
+        } else if (id == R.id.nav_logout) {
+            doActionLogout();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void doActionLogout() {
+        Pref.getInstance(this).clearAllData();
+        finish();
+        startActivity(getIntent());
     }
 
     @Override
@@ -144,12 +176,20 @@ public class MainActivity extends AppCompatActivity
         // Add a marker in Sydney and move the camera
         LatLng gorontalo = new LatLng(0.553042, 123.063151);
         //mMap.addMarker(new MarkerOptions().position(gorontalo).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(gorontalo,14));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(gorontalo, 14));
 
         loadAllMarkerDosen();
     }
 
     private void initMaps() {
+
+        mMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
+            @Override
+            public void onMyLocationChange(Location location) {
+                Pref.getInstance(MainActivity.this).storeMyPosition(location.getLatitude(), location.getLongitude());
+                System.out.println("STORE LOCATION");
+            }
+        });
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
@@ -160,7 +200,7 @@ public class MainActivity extends AppCompatActivity
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
             ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},MY_LOCATION_REQUEST_CODE);
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_LOCATION_REQUEST_CODE);
             return;
         }
 
@@ -184,16 +224,16 @@ public class MainActivity extends AppCompatActivity
         call.enqueue(new Callback<List<Dosen>>() {
             @Override
             public void onResponse(Call<List<Dosen>> call, Response<List<Dosen>> response) {
-                if(response.isSuccessful()){
-                    for (Dosen d :  response.body()) {
-                        LatLng ll = new LatLng(d.getLATITUDE(),d.getLONGITUDE());
+                if (response.isSuccessful()) {
+                    for (Dosen d : response.body()) {
+                        LatLng ll = new LatLng(d.getLATITUDE(), d.getLONGITUDE());
                         mMap.addMarker(new MarkerOptions()
                                 .position(ll)
                                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.home))
                                 .title(d.getNAMA()));
                     }
 
-                }else{
+                } else {
                     Snackbar.make(findViewById(R.id.content_main), getString(R.string.error_respon), Snackbar.LENGTH_INDEFINITE)
                             .setAction("Ulangi", new View.OnClickListener() {
                                 @Override
@@ -229,6 +269,16 @@ public class MainActivity extends AppCompatActivity
             if (permissions.length == 1 &&
                     permissions[0] == Manifest.permission.ACCESS_FINE_LOCATION &&
                     grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    return;
+                }
                 mMap.setMyLocationEnabled(true);
             } else {
                 // Permission was denied. Display an error message.

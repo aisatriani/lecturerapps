@@ -48,6 +48,7 @@ public class DosenMapsActivity extends AppCompatActivity implements OnMapReadyCa
     private AppBarLayout appbar;
     private boolean isExpanded;
     private TextView textNamaDosen, textTempatLahir, textTglLahir, textStatusDosen, textStatusKerja, textJabatanAkademik, textEmail;
+    private LatLng mLatLng;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +83,8 @@ public class DosenMapsActivity extends AppCompatActivity implements OnMapReadyCa
                 }
             }
         });
+
+        mLatLng = Pref.getInstance(DosenMapsActivity.this).getMyLatLng();
 
 
     }
@@ -173,14 +176,15 @@ public class DosenMapsActivity extends AppCompatActivity implements OnMapReadyCa
                         // Adding route on the map
                         mMap.addPolyline(rectLine);
                         mMap.addMarker(new MarkerOptions()
-                                .position(new LatLng(0.547451, 123.086840))
+                                //.position(new LatLng(0.547451, 123.086840))
+                                .position(mLatLng)
                                 .title("My location")
                         );
 
                         CameraPosition cameraPosition = new CameraPosition.Builder()
-                                .target(midPoint(0.547451, 123.086840, dosen.getLATITUDE(), dosen.getLONGITUDE()))
+                                .target(midPoint(mLatLng.latitude, mLatLng.longitude, dosen.getLATITUDE(), dosen.getLONGITUDE()))
                                 .zoom(14)
-                                .bearing((float) angleBteweenCoordinate(0.547451, 123.086840, dosen.getLATITUDE(), dosen.getLONGITUDE())).build();
+                                .bearing((float) angleBteweenCoordinate(mLatLng.latitude, mLatLng.longitude, dosen.getLATITUDE(), dosen.getLONGITUDE())).build();
 
                         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
 
