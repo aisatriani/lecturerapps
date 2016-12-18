@@ -79,7 +79,11 @@
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".PengaturanActivity"
-            android:label="@string/title_activity_pengaturan"></activity>
+            android:label="@string/title_activity_pengaturan" />
+
+        <activity android:name=".SettingActivity"
+            android:label="@string/title_activity_pengaturan"
+            android:exported="true"/>
     </application>
 
 </manifest>
