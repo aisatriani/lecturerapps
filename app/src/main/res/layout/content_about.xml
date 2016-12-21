@@ -25,7 +25,7 @@
             android:textSize="12sp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Aplikasi Lecturer Maps ini dibuat untuk mempermudah mahasiswa dalam mencari alamat dan lokasi rumah dosen-dosen Fakultas Teknik Universitas Negeri GOrontalo"/>
+            android:text="Aplikasi Lecturer Maps ini dibuat untuk mempermudah mahasiswa dalam mencari alamat dan lokasi rumah dosen-dosen Fakultas Teknik Universitas Negeri Gorontalo"/>
 
     </LinearLayout>
 
