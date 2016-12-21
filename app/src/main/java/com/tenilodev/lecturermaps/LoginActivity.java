@@ -11,10 +11,12 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import com.tenilodev.lecturermaps.api.ApiGenerator;
 import com.tenilodev.lecturermaps.api.ApiResponse;
 import com.tenilodev.lecturermaps.api.ClientServices;
+import com.tenilodev.lecturermaps.model.Dosen;
 import com.tenilodev.lecturermaps.model.Mahasiswa;
 
 import retrofit2.Call;
@@ -60,14 +62,74 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private void doActionLogin() {
+        Toast.makeText(this, spinnerLevel.getSelectedItem().toString(), Toast.LENGTH_SHORT).show();
         if(validate()){
             if(spinnerLevel.getSelectedItem().toString().equals("MAHASISWA")){
                 loginMahasiswa();
             }
             if(spinnerLevel.getSelectedItem().toString().equals("DOSEN")){
-
+                loginDosen();
             }
         }
+    }
+
+    private void loginDosen() {
+        final ProgressDialog pd = new ProgressDialog(this, R.style.AppTheme_Dark_Dialog);
+        pd.setMessage("Loading");
+        pd.setCanceledOnTouchOutside(false);
+        pd.show();
+
+        ClientServices services = ApiGenerator.createService(ClientServices.class);
+        Call<ApiResponse<Dosen>> call = services.loginDosen(getInputEmail().getText().toString(), getInputPassword().getText().toString());
+        call.enqueue(new Callback<ApiResponse<Dosen>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Dosen>> call, Response<ApiResponse<Dosen>> response) {
+                pd.dismiss();
+                if(response.isSuccessful()){
+
+                    if(response.body().getData() != null){
+                        Pref.getInstance(LoginActivity.this).setLoginIn(true);
+                        Pref.getInstance(LoginActivity.this).storeDataDosen(response.body().getData());
+                        Pref.getInstance(LoginActivity.this).storeNim(getInputEmail().getText().toString());
+                        Pref.getInstance(LoginActivity.this).storeLoginState(Config.LOGIN_STATE_DOSEN);
+
+                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                        startActivity(intent);
+                        LoginActivity.this.finish();
+                    }else {
+                        Snackbar.make(findViewById(R.id.btn_login), "Username atau password salah", Snackbar.LENGTH_INDEFINITE)
+                                .show();
+                    }
+
+
+                }else{
+
+
+
+                    Snackbar.make(findViewById(R.id.btn_login), "Ada masalah terjadi di server", Snackbar.LENGTH_INDEFINITE)
+                            .setAction("Ulangi", new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    loginMahasiswa();
+                                }
+                            })
+                            .show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Dosen>> call, Throwable t) {
+                pd.dismiss();
+                Snackbar.make(findViewById(R.id.btn_login), "Gagal terhubung", Snackbar.LENGTH_INDEFINITE)
+                        .setAction("Ulangi", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                loginMahasiswa();
+                            }
+                        })
+                        .show();
+            }
+        });
     }
 
     private void loginMahasiswa() {
@@ -89,6 +151,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                         Pref.getInstance(LoginActivity.this).setLoginIn(true);
                         Pref.getInstance(LoginActivity.this).storeDataMahasiswa(response.body().getData());
                         Pref.getInstance(LoginActivity.this).storeNim(getInputEmail().getText().toString());
+                        Pref.getInstance(LoginActivity.this).storeLoginState(Config.LOGIN_STATE_MAHASISWA);
 
                         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                         startActivity(intent);

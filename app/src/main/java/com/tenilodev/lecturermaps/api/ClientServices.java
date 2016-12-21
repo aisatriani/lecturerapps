@@ -25,6 +25,10 @@ public interface ClientServices {
     @POST("loginmahasiswa")
     public Call<ApiResponse<Mahasiswa>> loginMahasiswa(@Field("nim") String nim, @Field("pwd") String pwd);
 
+    @FormUrlEncoded
+    @POST("logindosen")
+    public Call<ApiResponse<Dosen>> loginDosen(@Field("nidn") String nidn, @Field("pwd") String pwd);
+
     @GET("prodi")
     public Call<ApiResponse<List<Fakultas>>> getAllProdi();
 

@@ -11,5 +11,9 @@ public class Config {
     public static final String DOMISILI_KAB = "KAB. GORONTALO";
     public static final String DOMISILI_BONE = "BONE BOLANGO";
 
+    public static final String KEY_LOGIN_STATE = "key_login_state";
+    public static final int LOGIN_STATE_MAHASISWA = 1;
+    public static final int LOGIN_STATE_DOSEN = 2;
+
 
 }

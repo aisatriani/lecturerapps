@@ -25,6 +25,7 @@ public class Mahasiswa implements Serializable{
     private String JALUR;
     private AlamatTetap ALAMATTETAP;
     private String EMAIL;
+    private DosenPA DOSENPA;
 
     public class AlamatTetap {
         String ALAMAT;
@@ -33,6 +34,11 @@ public class Mahasiswa implements Serializable{
         String KEC;
         String DESA;
         String KODEPOS;
+    }
+
+    public class DosenPA{
+        String NIDN;
+        String NAMA;
     }
 
     public String getNAMA() {
@@ -169,5 +175,13 @@ public class Mahasiswa implements Serializable{
 
     public void setEMAIL(String EMAIL) {
         this.EMAIL = EMAIL;
+    }
+
+    public DosenPA getDOSENPA() {
+        return DOSENPA;
+    }
+
+    public void setDOSENPA(DosenPA DOSENPA) {
+        this.DOSENPA = DOSENPA;
     }
 }

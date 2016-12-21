@@ -56,6 +56,8 @@ public class MainActivity extends AppCompatActivity
     private NavigationView navigationView;
     private Mahasiswa currentMahasiswa;
     private HashMap<Dosen, Marker> markerHashMap = new HashMap<>();
+    private int state_login;
+    private Dosen currentDosen;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +65,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
 
         if (!Pref.getInstance(this).isLoginIn()) {
             Intent intent = new Intent(this, LoginActivity.class);
@@ -72,6 +75,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         currentMahasiswa = Pref.getInstance(this).getDataMahasiswa();
+        currentDosen = Pref.getInstance(this).getDataDosen();
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -89,12 +93,20 @@ public class MainActivity extends AppCompatActivity
         mapFragment.getMapAsync(this);
     }
 
+
     private void setContentHeader() {
        TextView textHeader = (TextView) navigationView.getHeaderView(0).findViewById(R.id.header_name);
        TextView textNim = (TextView) navigationView.getHeaderView(0).findViewById(R.id.header_nim);
 
-        textHeader.setText(currentMahasiswa.getNAMA());
-        textNim.setText(Pref.getInstance(this).getNim());
+        if(currentMahasiswa != null) {
+            textHeader.setText(currentMahasiswa.getNAMA());
+            textNim.setText(Pref.getInstance(this).getNim());
+        }
+
+        if(currentDosen != null){
+            textHeader.setText(currentDosen.getNAMA());
+            textNim.setText(Pref.getInstance(this).getNim());
+        }
     }
 
     @Override

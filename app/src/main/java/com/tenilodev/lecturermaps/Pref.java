@@ -110,7 +110,18 @@ public class Pref {
         editor.apply();
     }
 
+    public void storeLoginState(int state)
+    {
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putInt(Config.KEY_LOGIN_STATE, state);
+        editor.apply();
+    }
 
+    public int getLoginState()
+    {
+        int state = pref.getInt(Config.KEY_LOGIN_STATE, 0);
+        return state;
+    }
 
 
 
