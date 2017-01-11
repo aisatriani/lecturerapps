@@ -2,10 +2,8 @@
 
     <SwitchPreference
         android:defaultValue="true"
-        android:key="example_switch"
+        android:key="location_switch"
         android:summary=""
         android:title="Enable Detect Location" />
-
-
 
 </PreferenceScreen>

@@ -20,6 +20,7 @@ public class Pref {
     private static final String KEY_DATA_DOSEN = "key_dosen";
     private static final String KEY_LOGIN = "key_login";
     private static final String KEY_NIM = "key_nim";
+    private static final String KEY_LOKASI_STATE = "key_lokasi_state";
     private static Pref ourInstance;
     private final Context context;
     private final SharedPreferences pref;
@@ -120,6 +121,18 @@ public class Pref {
     public int getLoginState()
     {
         int state = pref.getInt(Config.KEY_LOGIN_STATE, 0);
+        return state;
+    }
+
+    public void setUpdateLokasiDosen(boolean state){
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putBoolean(KEY_LOKASI_STATE, state);
+        editor.apply();
+    }
+
+    public boolean isEnableUpdateLocation()
+    {
+        boolean state = pref.getBoolean(KEY_LOKASI_STATE, true);
         return state;
     }
 

@@ -3,16 +3,20 @@ package com.tenilodev.lecturermaps;
 import android.Manifest;
 import android.app.ProgressDialog;
 import android.app.SearchManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
+import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 
 
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.SearchView;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -37,10 +41,13 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.tenilodev.lecturermaps.api.ApiGenerator;
 import com.tenilodev.lecturermaps.api.ClientServices;
 import com.tenilodev.lecturermaps.model.Dosen;
+import com.tenilodev.lecturermaps.model.LokasiDosen;
 import com.tenilodev.lecturermaps.model.Mahasiswa;
+import com.tenilodev.lecturermaps.services.CheckLocationService;
+import com.tenilodev.lecturermaps.services.UpdateLocationService;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -58,6 +65,8 @@ public class MainActivity extends AppCompatActivity
     private HashMap<Dosen, Marker> markerHashMap = new HashMap<>();
     private int state_login;
     private Dosen currentDosen;
+    private SharedPreferences sharedPreferences;
+    private BroadcastReceiver receiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +75,8 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+
 
         if (!Pref.getInstance(this).isLoginIn()) {
             Intent intent = new Intent(this, LoginActivity.class);
@@ -73,6 +84,8 @@ public class MainActivity extends AppCompatActivity
             this.finish();
             return;
         }
+
+        checkStateLogin();
 
         currentMahasiswa = Pref.getInstance(this).getDataMahasiswa();
         currentDosen = Pref.getInstance(this).getDataDosen();
@@ -91,8 +104,84 @@ public class MainActivity extends AppCompatActivity
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        receiver = new BroadcastReceiver(){
+
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                //Toast.makeText(MainActivity.this, "update lokasi dosen", Toast.LENGTH_SHORT).show();
+                ArrayList<LokasiDosen> lokasiDosens = intent.getParcelableArrayListExtra(CheckLocationService.ACTION_LOCATION_DATA);
+                for (LokasiDosen ldosen : lokasiDosens) {
+                    if(mMap != null)
+                        mMap.addMarker(new MarkerOptions()
+                                .title(ldosen.getNidn())
+                                .position(new LatLng(ldosen.getLatitude(), ldosen.getLongitude()))
+                        );
+                }
+            }
+        };
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        LocalBroadcastManager.getInstance(this).registerReceiver(receiver,
+                new IntentFilter(CheckLocationService.ACTION_LOCATION_RESULT));
+    }
+
+    @Override
+    protected void onStop() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
+        super.onStop();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        checkStateLogin();
+    }
+
+    private void checkStateLogin() {
+
+        boolean isAutoUpdateLocation = sharedPreferences.getBoolean("location_switch", true);
+
+        int state = Pref.getInstance(this).getLoginState();
+
+        if(state == Config.LOGIN_STATE_DOSEN) {
+            if (isAutoUpdateLocation) {
+                startService(new Intent(this, UpdateLocationService.class));
+            } else {
+                stopService(new Intent(this, UpdateLocationService.class));
+                doDisableUpdateLocation();
+            }
+        }
+
+        if(state == Config.LOGIN_STATE_MAHASISWA){
+            startService(new Intent(this, CheckLocationService.class));
+        }
+    }
+
+    private void doDisableUpdateLocation() {
+
+        ClientServices services = ApiGenerator.createService(ClientServices.class);
+        Call<LokasiDosen> call = services.updateLokasiDosen(Pref.getInstance(this).getDataDosen().getNIDN(),
+                Pref.getInstance(this).getMyLatLng().latitude,Pref.getInstance(this).getMyLatLng().longitude , 0
+        );
+
+        call.enqueue(new Callback<LokasiDosen>() {
+            @Override
+            public void onResponse(Call<LokasiDosen> call, Response<LokasiDosen> response) {
+                if(response.isSuccessful()){
+                    System.out.println("update disable user dosen");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<LokasiDosen> call, Throwable t) {
+                System.out.println("gagal update disable user dosen");
+            }
+        });
+    }
 
     private void setContentHeader() {
        TextView textHeader = (TextView) navigationView.getHeaderView(0).findViewById(R.id.header_name);
@@ -203,13 +292,13 @@ public class MainActivity extends AppCompatActivity
 
     private void initMaps() {
 
-        mMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
-            @Override
-            public void onMyLocationChange(Location location) {
-                Pref.getInstance(MainActivity.this).storeMyPosition(location.getLatitude(), location.getLongitude());
-                System.out.println("STORE LOCATION");
-            }
-        });
+//        mMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
+//            @Override
+//            public void onMyLocationChange(Location location) {
+//                Pref.getInstance(MainActivity.this).storeMyPosition(location.getLatitude(), location.getLongitude());
+//                System.out.println("STORE LOCATION");
+//            }
+//        });
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling

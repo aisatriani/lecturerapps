@@ -1,6 +1,8 @@
 127.0.0.1       localhost
 ::1             ip6-localhost
-10.0.2.2		atupato.dev
-10.0.2.2        futsal.dev
-10.0.2.2        bengkel.dev
-10.0.2.2        wssiat.dev
+192.168.56.1    bengkel.dev
+192.168.56.1    kuliner.dev
+192.168.56.1    futsal.dev
+192.168.56.1    wssiat.dev
+192.168.56.1    atupato.dev
+

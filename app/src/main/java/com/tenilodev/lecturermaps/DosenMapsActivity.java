@@ -66,7 +66,6 @@ public class DosenMapsActivity extends AppCompatActivity implements OnMapReadyCa
 
         isExpanded = true;
 
-
         initView();
         handleIntent(getIntent());
 

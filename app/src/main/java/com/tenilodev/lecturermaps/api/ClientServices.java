@@ -3,8 +3,10 @@ package com.tenilodev.lecturermaps.api;
 import com.tenilodev.lecturermaps.model.DirectionResults;
 import com.tenilodev.lecturermaps.model.Dosen;
 import com.tenilodev.lecturermaps.model.Fakultas;
+import com.tenilodev.lecturermaps.model.LokasiDosen;
 import com.tenilodev.lecturermaps.model.Mahasiswa;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
@@ -40,6 +42,16 @@ public interface ClientServices {
 
     @GET("dosen/{domisili}/domisili")
     public Call<List<Dosen>> getDosenByDomisili(@Path("domisili") String domisili);
+
+    @FormUrlEncoded
+    @POST("lokasi")
+    public Call<LokasiDosen> updateLokasiDosen(@Field("nidn") String nidn,
+                                               @Field("latitude") double latitude,
+                                               @Field("longitude") double longitude,
+                                               @Field("active") int active);
+
+    @GET("lokasi")
+    public Call<ArrayList<LokasiDosen>> getActiveLokasiDosen();
 
     @GET("/maps/api/directions/json")
     public Call<DirectionResults> getDirection(@Query("origin") String origin,@Query("destination") String destination);
