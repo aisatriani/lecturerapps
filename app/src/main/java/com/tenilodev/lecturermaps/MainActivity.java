@@ -67,6 +67,7 @@ public class MainActivity extends AppCompatActivity
     private Dosen currentDosen;
     private SharedPreferences sharedPreferences;
     private BroadcastReceiver receiver;
+    private HashMap<Marker, String> markerLokasiDosen = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,14 +113,26 @@ public class MainActivity extends AppCompatActivity
                 //Toast.makeText(MainActivity.this, "update lokasi dosen", Toast.LENGTH_SHORT).show();
                 ArrayList<LokasiDosen> lokasiDosens = intent.getParcelableArrayListExtra(CheckLocationService.ACTION_LOCATION_DATA);
                 for (LokasiDosen ldosen : lokasiDosens) {
-                    if(mMap != null)
-                        mMap.addMarker(new MarkerOptions()
-                                .title(ldosen.getNidn())
+
+                    removeActiveMarker();
+
+                      Marker dosenMarker = mMap.addMarker(new MarkerOptions()
+                                .title(ldosen.getNama())
+                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker_user))
                                 .position(new LatLng(ldosen.getLatitude(), ldosen.getLongitude()))
                         );
+
+                    markerLokasiDosen.put(dosenMarker, ldosen.getNidn());
                 }
             }
         };
+    }
+
+    private void removeActiveMarker() {
+        if(markerLokasiDosen.size() > 0)
+            for(Marker marker : markerLokasiDosen.keySet()){
+                marker.remove();
+            }
     }
 
     @Override
@@ -164,7 +177,7 @@ public class MainActivity extends AppCompatActivity
     private void doDisableUpdateLocation() {
 
         ClientServices services = ApiGenerator.createService(ClientServices.class);
-        Call<LokasiDosen> call = services.updateLokasiDosen(Pref.getInstance(this).getDataDosen().getNIDN(),
+        Call<LokasiDosen> call = services.updateLokasiDosen(Pref.getInstance(this).getDataDosen().getNIDN(), Pref.getInstance(this).getDataDosen().getNAMA(),
                 Pref.getInstance(this).getMyLatLng().latitude,Pref.getInstance(this).getMyLatLng().longitude , 0
         );
 

@@ -10,8 +10,10 @@ import java.io.Serializable;
  */
 
 public class LokasiDosen implements Serializable, Parcelable {
+
     private int id;
     private String nidn;
+    private String nama;
     private double latitude;
     private double longitude;
     private int active;
@@ -32,6 +34,14 @@ public class LokasiDosen implements Serializable, Parcelable {
 
     public void setNidn(String nidn) {
         this.nidn = nidn;
+    }
+
+    public String getNama() {
+        return nama;
+    }
+
+    public void setNama(String nama) {
+        this.nama = nama;
     }
 
     public double getLatitude() {

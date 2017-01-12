@@ -1,16 +1,19 @@
 package com.tenilodev.lecturermaps.services;
 
+import android.Manifest;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
 import com.google.android.gms.location.LocationRequest;
@@ -40,8 +43,7 @@ public class UpdateLocationService extends Service {
     }
 
     @Override
-    public void onCreate()
-    {
+    public void onCreate() {
         Log.e(TAG, "onCreate");
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
@@ -79,21 +81,20 @@ public class UpdateLocationService extends Service {
         //doUpdateLocation();
 
 
-
         return START_NOT_STICKY;
     }
 
     private void doUpdateLocation(Location location) {
 
         ClientServices services = ApiGenerator.createService(ClientServices.class);
-        Call<LokasiDosen> call = services.updateLokasiDosen(Pref.getInstance(this).getDataDosen().getNIDN(),
+        Call<LokasiDosen> call = services.updateLokasiDosen(Pref.getInstance(this).getDataDosen().getNIDN(), Pref.getInstance(this).getDataDosen().getNAMA(),
                 location.getLatitude(), location.getLongitude(), getStatusActive()
         );
 
         call.enqueue(new Callback<LokasiDosen>() {
             @Override
             public void onResponse(Call<LokasiDosen> call, Response<LokasiDosen> response) {
-                if(response.isSuccessful()){
+                if (response.isSuccessful()) {
                     System.out.println("berhasil memperbaharui lokasi");
                     stopSelf();
                 }
@@ -109,7 +110,7 @@ public class UpdateLocationService extends Service {
 
     private int getStatusActive() {
         boolean isAutoUpdateLocation = sharedPreferences.getBoolean("location_switch", true);
-        if(isAutoUpdateLocation)
+        if (isAutoUpdateLocation)
             return 1;
         else
             return 0;
@@ -122,6 +123,16 @@ public class UpdateLocationService extends Service {
         if (mLocationManager != null) {
             for (int i = 0; i < mLocationListeners.length; i++) {
                 try {
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        // TODO: Consider calling
+                        //    ActivityCompat#requestPermissions
+                        // here to request the missing permissions, and then overriding
+                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                        //                                          int[] grantResults)
+                        // to handle the case where the user grants the permission. See the documentation
+                        // for ActivityCompat#requestPermissions for more details.
+                        return;
+                    }
                     mLocationManager.removeUpdates(mLocationListeners[i]);
                 } catch (Exception ex) {
                     Log.i(TAG, "fail to remove location listners, ignore", ex);
