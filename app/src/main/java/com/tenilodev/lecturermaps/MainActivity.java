@@ -118,7 +118,7 @@ public class MainActivity extends AppCompatActivity
 
                       Marker dosenMarker = mMap.addMarker(new MarkerOptions()
                                 .title(ldosen.getNama())
-                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker_user))
+                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker_dosen))
                                 .position(new LatLng(ldosen.getLatitude(), ldosen.getLongitude()))
                         );
 
