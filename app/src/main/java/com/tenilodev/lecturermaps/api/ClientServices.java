@@ -46,7 +46,7 @@ public interface ClientServices {
     @FormUrlEncoded
     @POST("lokasi")
     public Call<LokasiDosen> updateLokasiDosen(@Field("nidn") String nidn,
-                                               @Field("namna") String nama,
+                                               @Field("nama") String nama,
                                                @Field("latitude") double latitude,
                                                @Field("longitude") double longitude,
                                                @Field("active") int active);

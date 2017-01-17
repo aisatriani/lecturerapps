@@ -20,6 +20,29 @@ public class LokasiDosen implements Serializable, Parcelable {
     private String created_at;
     private String updated_at;
 
+    protected LokasiDosen(Parcel in) {
+        id = in.readInt();
+        nidn = in.readString();
+        nama = in.readString();
+        latitude = in.readDouble();
+        longitude = in.readDouble();
+        active = in.readInt();
+        created_at = in.readString();
+        updated_at = in.readString();
+    }
+
+    public static final Creator<LokasiDosen> CREATOR = new Creator<LokasiDosen>() {
+        @Override
+        public LokasiDosen createFromParcel(Parcel in) {
+            return new LokasiDosen(in);
+        }
+
+        @Override
+        public LokasiDosen[] newArray(int size) {
+            return new LokasiDosen[size];
+        }
+    };
+
     public int getId() {
         return id;
     }
@@ -91,6 +114,13 @@ public class LokasiDosen implements Serializable, Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-
+        dest.writeInt(id);
+        dest.writeString(nidn);
+        dest.writeString(nama);
+        dest.writeDouble(latitude);
+        dest.writeDouble(longitude);
+        dest.writeInt(active);
+        dest.writeString(created_at);
+        dest.writeString(updated_at);
     }
 }
