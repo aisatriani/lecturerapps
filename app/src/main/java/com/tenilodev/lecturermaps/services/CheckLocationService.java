@@ -73,7 +73,7 @@ public class CheckLocationService extends Service {
     private void sendResult(ArrayList<LokasiDosen> listDosen){
         Intent intent = new Intent(ACTION_LOCATION_RESULT);
         intent.putParcelableArrayListExtra(ACTION_LOCATION_DATA, listDosen);
-        if(listDosen.size() > 0)
+        //if(listDosen.size() > 0)
             broadcastManager.sendBroadcast(intent);
     }
 

@@ -110,11 +110,13 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onReceive(Context context, Intent intent) {
+                removeActiveMarker();
+                System.out.println("receive lokasi dosen");
                 //Toast.makeText(MainActivity.this, "update lokasi dosen", Toast.LENGTH_SHORT).show();
                 ArrayList<LokasiDosen> lokasiDosens = intent.getParcelableArrayListExtra(CheckLocationService.ACTION_LOCATION_DATA);
                 for (LokasiDosen ldosen : lokasiDosens) {
 
-                    removeActiveMarker();
+                    //Toast.makeText(context, "set lokasi dosen in marker receive update", Toast.LENGTH_SHORT).show();
 
                       Marker dosenMarker = mMap.addMarker(new MarkerOptions()
                                 .title(ldosen.getNama())
@@ -129,9 +131,11 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void removeActiveMarker() {
+
         if(markerLokasiDosen.size() > 0)
             for(Marker marker : markerLokasiDosen.keySet()){
                 marker.remove();
+                System.out.println("remove active marker");
             }
     }
 
@@ -186,6 +190,7 @@ public class MainActivity extends AppCompatActivity
             public void onResponse(Call<LokasiDosen> call, Response<LokasiDosen> response) {
                 if(response.isSuccessful()){
                     System.out.println("update disable user dosen");
+
                 }
             }
 
@@ -194,6 +199,44 @@ public class MainActivity extends AppCompatActivity
                 System.out.println("gagal update disable user dosen");
             }
         });
+
+        removeActiveMarker();
+    }
+
+    private void doDisableUpdateLocationLogout() {
+        final ProgressDialog pd = new ProgressDialog(this);
+        pd.setMessage("Waiting for logout");
+        pd.setCanceledOnTouchOutside(false);
+        pd.show();
+        ClientServices services = ApiGenerator.createService(ClientServices.class);
+        Call<LokasiDosen> call = services.updateLokasiDosen(Pref.getInstance(this).getDataDosen().getNIDN(), Pref.getInstance(this).getDataDosen().getNAMA(),
+                Pref.getInstance(this).getMyLatLng().latitude,Pref.getInstance(this).getMyLatLng().longitude , 0
+        );
+
+        call.enqueue(new Callback<LokasiDosen>() {
+            @Override
+            public void onResponse(Call<LokasiDosen> call, Response<LokasiDosen> response) {
+                pd.dismiss();
+                if(response.isSuccessful()){
+                    stopService(new Intent(MainActivity.this, UpdateLocationService.class));
+                    System.out.println("update disable user dosen");
+                    //Pref.getInstance(MainActivity.this).clearAllData();
+                    Pref.getInstance(MainActivity.this).setLoginIn(false);
+                    sharedPreferences.edit().putBoolean("location_switch", false).apply();
+                    finish();
+                    startActivity(getIntent());
+
+                }
+            }
+
+            @Override
+            public void onFailure(Call<LokasiDosen> call, Throwable t) {
+                pd.dismiss();
+                System.out.println("gagal update disable user dosen");
+            }
+        });
+
+        removeActiveMarker();
     }
 
     private void setContentHeader() {
@@ -284,9 +327,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void doActionLogout() {
-        Pref.getInstance(this).clearAllData();
-        finish();
-        startActivity(getIntent());
+        doDisableUpdateLocationLogout();
     }
 
     @Override
@@ -304,14 +345,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void initMaps() {
-
-//        mMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
-//            @Override
-//            public void onMyLocationChange(Location location) {
-//                Pref.getInstance(MainActivity.this).storeMyPosition(location.getLatitude(), location.getLongitude());
-//                System.out.println("STORE LOCATION");
-//            }
-//        });
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
@@ -335,15 +368,21 @@ public class MainActivity extends AppCompatActivity
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
+                if(markerLokasiDosen.containsKey(marker)){
+                    return false;
+                }
 
-                for(Map.Entry<Dosen, Marker> entry : markerHashMap.entrySet()){
-                    if(entry.getValue().equals(marker)){
-                        //Toast.makeText(MainActivity.this, entry.getValue().getTitle(), Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(MainActivity.this, DosenMapsActivity.class);
-                        intent.putExtra("dosen",entry.getKey());
-                        startActivity(intent);
+                if(markerHashMap.size() > 0){
+                    for(Map.Entry<Dosen, Marker> entry : markerHashMap.entrySet()){
+                        if(entry.getValue().equals(marker)){
+                            //Toast.makeText(MainActivity.this, entry.getValue().getTitle(), Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(MainActivity.this, DosenMapsActivity.class);
+                            intent.putExtra("dosen",entry.getKey());
+                            startActivity(intent);
+                        }
                     }
                 }
+
                 return true;
             }
         });

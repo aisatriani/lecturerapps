@@ -43,7 +43,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textPersonName"
-                android:text="531411094"
+                android:text=""
                 android:hint="NIDN/NIM" />
         </android.support.design.widget.TextInputLayout>
 
@@ -57,7 +57,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textPassword"
-                android:text="LebotO123"
+                android:text=""
                 android:hint="Password"/>
         </android.support.design.widget.TextInputLayout>
 
