@@ -9,16 +9,22 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.database.MatrixCursor;
 import android.location.Location;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.BaseColumns;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 
 
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.widget.CursorAdapter;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.widget.SearchView;
+import android.text.TextUtils;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -39,6 +45,10 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
 import com.tenilodev.lecturermaps.api.ApiGenerator;
 import com.tenilodev.lecturermaps.api.ClientServices;
 import com.tenilodev.lecturermaps.model.Dosen;
@@ -69,6 +79,13 @@ public class MainActivity extends AppCompatActivity
     private SharedPreferences sharedPreferences;
     private BroadcastReceiver receiver;
     private HashMap<Marker, String> markerLokasiDosen = new HashMap<>();
+    private SearchView searchView;
+    private List<String> mListDosen = new ArrayList<>();
+
+    private String[] sAutocompleteColNames = new String[] {
+            BaseColumns._ID,                         // necessary for adapter
+            SearchManager.SUGGEST_COLUMN_TEXT_1};      // the full search term
+    private HashMap<String, Marker> markerNama = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -272,13 +289,77 @@ public class MainActivity extends AppCompatActivity
         SearchManager searchManager =
                 (SearchManager) getSystemService(Context.SEARCH_SERVICE);
 
-        SearchView searchView =
+        searchView =
                 (SearchView) menu.findItem(R.id.search).getActionView();
 
         searchView.setSearchableInfo(
                 searchManager.getSearchableInfo(getComponentName()));
 
+       final SimpleCursorAdapter adapter = new SimpleCursorAdapter(this,
+        android.R.layout.simple_list_item_1,
+                null,
+                new String[]{SearchManager.SUGGEST_COLUMN_TEXT_1},
+                new int[]{android.R.id.text1});
+
+        searchView.setSuggestionsAdapter(adapter);
+
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+
+                if(!TextUtils.isEmpty(newText)){
+                    String upperText = newText.toUpperCase();
+                    List<String> list = Lists.newArrayList(Collections2.filter(
+                            mListDosen, Predicates.containsPattern(upperText)));
+                    populateCursorAdapter(list);
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        searchView.setOnSuggestionListener(new SearchView.OnSuggestionListener() {
+            @Override
+            public boolean onSuggestionSelect(int position) {
+                Cursor cursor = (Cursor) searchView.getSuggestionsAdapter().getItem(position);
+                String term = cursor.getString(cursor.getColumnIndex(SearchManager.SUGGEST_COLUMN_TEXT_1));
+                cursor.close();
+
+                for(Map.Entry<String, Marker> entry : markerNama.entrySet()){
+                    if(entry.getKey().contains(term)){
+                        entry.getValue().showInfoWindow();
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(entry.getValue().getPosition(),16));
+                    }
+                }
+                //Toast.makeText(MainActivity.this, term, Toast.LENGTH_SHORT).show();
+                return true;
+            }
+
+            @Override
+            public boolean onSuggestionClick(int position) {
+
+                return onSuggestionSelect(position);
+            }
+        });
+
         return true;
+    }
+
+    private void populateCursorAdapter(List<String> list) {
+        MatrixCursor cursor = new MatrixCursor(sAutocompleteColNames);
+        for (int i = 0; i < list.size(); i++){
+            Object[] row = new Object[]{Integer.toString(i),list.get(i)};
+            cursor.addRow(row);
+        }
+
+        searchView.getSuggestionsAdapter().changeCursor(cursor);
+
     }
 
     @Override
@@ -376,6 +457,7 @@ public class MainActivity extends AppCompatActivity
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
+
                 if(markerLokasiDosen.containsKey(marker)){
                     return false;
                 }
@@ -410,10 +492,17 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onResponse(Call<List<Dosen>> call, Response<List<Dosen>> response) {
                 if (response.isSuccessful()) {
-                    //for (Dosen d : response.body()) {
+
+                    MatrixCursor cursor = new MatrixCursor(sAutocompleteColNames);
+
                     for(int i = 0; i < response.body().size(); i++){
 
+                        mListDosen.add(response.body().get(i).getNAMA());
+
                         LatLng ll = new LatLng(response.body().get(i).getLATITUDE(), response.body().get(i).getLONGITUDE());
+
+                        Object[] row = new Object[] {response.body().get(i).getNIDN(), response.body().get(i).getNAMA()};
+                        cursor.addRow(row);
 
                         Marker marker = mMap.addMarker(new MarkerOptions()
                                 .position(ll)
@@ -421,7 +510,10 @@ public class MainActivity extends AppCompatActivity
                                 .title(response.body().get(i).getNAMA()));
 
                         markerHashMap.put(response.body().get(i),marker);
+                        markerNama.put(response.body().get(i).getNAMA(), marker);
                     }
+
+                    //searchView.getSuggestionsAdapter().changeCursor(cursor);
 
                 } else {
                     Snackbar.make(findViewById(R.id.content_main), getString(R.string.error_respon), Snackbar.LENGTH_INDEFINITE)
