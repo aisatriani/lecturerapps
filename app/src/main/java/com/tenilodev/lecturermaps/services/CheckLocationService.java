@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 
+import com.tenilodev.lecturermaps.Pref;
 import com.tenilodev.lecturermaps.api.ApiGenerator;
 import com.tenilodev.lecturermaps.api.ClientServices;
 import com.tenilodev.lecturermaps.model.LokasiDosen;
@@ -93,8 +94,8 @@ public class CheckLocationService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-
-        retryService();
+        if(Pref.getInstance(this).isLoginIn())
+            retryService();
 
     }
 }

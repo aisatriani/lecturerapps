@@ -329,6 +329,7 @@ public class MainActivity extends AppCompatActivity
         if(Pref.getInstance(this).getLoginState() == Config.LOGIN_STATE_MAHASISWA){
             Pref.getInstance(MainActivity.this).setLoginIn(false);
             sharedPreferences.edit().putBoolean("location_switch", false).apply();
+            stopService(new Intent(this, CheckLocationService.class));
             finish();
             startActivity(getIntent());
         }
