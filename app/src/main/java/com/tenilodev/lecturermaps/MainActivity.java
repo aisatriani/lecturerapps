@@ -16,6 +16,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 
 
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.SearchView;
 import android.view.View;
@@ -112,12 +113,8 @@ public class MainActivity extends AppCompatActivity
             public void onReceive(Context context, Intent intent) {
                 removeActiveMarker();
                 System.out.println("receive lokasi dosen");
-                //Toast.makeText(MainActivity.this, "update lokasi dosen", Toast.LENGTH_SHORT).show();
                 ArrayList<LokasiDosen> lokasiDosens = intent.getParcelableArrayListExtra(CheckLocationService.ACTION_LOCATION_DATA);
                 for (LokasiDosen ldosen : lokasiDosens) {
-
-                    //Toast.makeText(context, "set lokasi dosen in marker receive update", Toast.LENGTH_SHORT).show();
-
                       Marker dosenMarker = mMap.addMarker(new MarkerOptions()
                                 .title(ldosen.getNama())
                                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker_dosen))
@@ -243,15 +240,17 @@ public class MainActivity extends AppCompatActivity
        TextView textHeader = (TextView) navigationView.getHeaderView(0).findViewById(R.id.header_name);
        TextView textNim = (TextView) navigationView.getHeaderView(0).findViewById(R.id.header_nim);
 
-        if(currentMahasiswa != null) {
-            textHeader.setText(currentMahasiswa.getNAMA());
-            textNim.setText(Pref.getInstance(this).getNim());
-        }
+        if(Pref.getInstance(this).getLoginState() == Config.LOGIN_STATE_MAHASISWA)
+            if(currentMahasiswa != null) {
+                textHeader.setText(currentMahasiswa.getNAMA());
+                textNim.setText(Pref.getInstance(this).getNim());
+            }
 
-        if(currentDosen != null){
-            textHeader.setText(currentDosen.getNAMA());
-            textNim.setText(Pref.getInstance(this).getNim());
-        }
+        if(Pref.getInstance(this).getLoginState() == Config.LOGIN_STATE_DOSEN)
+            if(currentDosen != null){
+                textHeader.setText(currentDosen.getNAMA());
+                textNim.setText(Pref.getInstance(this).getNim());
+            }
     }
 
     @Override
@@ -327,7 +326,15 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void doActionLogout() {
-        doDisableUpdateLocationLogout();
+        if(Pref.getInstance(this).getLoginState() == Config.LOGIN_STATE_MAHASISWA){
+            Pref.getInstance(MainActivity.this).setLoginIn(false);
+            sharedPreferences.edit().putBoolean("location_switch", false).apply();
+            finish();
+            startActivity(getIntent());
+        }
+        if(Pref.getInstance(this).getLoginState() == Config.LOGIN_STATE_DOSEN) {
+            doDisableUpdateLocationLogout();
+        }
     }
 
     @Override
