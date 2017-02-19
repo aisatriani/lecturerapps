@@ -18,6 +18,10 @@ allprojects {
         jcenter()
         mavenCentral()
     }
+
+    tasks.matching {it instanceof Test}.all {
+        testLogging.events = ["failed", "passed", "skipped"]
+    }
 }
 
 task clean(type: Delete) {

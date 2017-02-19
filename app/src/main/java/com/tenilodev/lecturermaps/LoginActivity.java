@@ -15,7 +15,9 @@ import android.widget.Toast;
 
 import com.tenilodev.lecturermaps.api.ApiGenerator;
 import com.tenilodev.lecturermaps.api.ApiResponse;
+import com.tenilodev.lecturermaps.api.ApiSiatGenerator;
 import com.tenilodev.lecturermaps.api.ClientServices;
+import com.tenilodev.lecturermaps.api.SiatMethod;
 import com.tenilodev.lecturermaps.model.Dosen;
 import com.tenilodev.lecturermaps.model.Mahasiswa;
 
@@ -79,7 +81,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         pd.setCanceledOnTouchOutside(false);
         pd.show();
 
-        ClientServices services = ApiGenerator.createService(ClientServices.class);
+        SiatMethod services = ApiSiatGenerator.createService(SiatMethod.class);
         Call<ApiResponse<Dosen>> call = services.loginDosen(getInputEmail().getText().toString(), getInputPassword().getText().toString());
         call.enqueue(new Callback<ApiResponse<Dosen>>() {
             @Override
@@ -139,7 +141,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         pd.setCanceledOnTouchOutside(false);
         pd.show();
 
-        ClientServices services = ApiGenerator.createService(ClientServices.class);
+        SiatMethod services = ApiSiatGenerator.createService(SiatMethod.class);
         Call<ApiResponse<Mahasiswa>> call = services.loginMahasiswa(getInputEmail().getText().toString(), getInputPassword().getText().toString());
         call.enqueue(new Callback<ApiResponse<Mahasiswa>>() {
             @Override

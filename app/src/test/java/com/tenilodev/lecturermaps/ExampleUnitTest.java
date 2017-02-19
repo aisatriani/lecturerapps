@@ -1,6 +1,17 @@
 package com.tenilodev.lecturermaps;
 
+import com.tenilodev.lecturermaps.api.ApiResponse;
+import com.tenilodev.lecturermaps.api.ApiSiatGenerator;
+import com.tenilodev.lecturermaps.api.SiatMethod;
+import com.tenilodev.lecturermaps.model.Dosen;
+
 import org.junit.Test;
+
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import static org.junit.Assert.*;
 
@@ -12,6 +23,8 @@ import static org.junit.Assert.*;
 public class ExampleUnitTest {
     @Test
     public void addition_isCorrect() throws Exception {
-        assertEquals(4, 2 + 2);
+        SiatMethod service = ApiSiatGenerator.createService(SiatMethod.class);
+        Response<ApiResponse<List<Dosen>>> execute = service.getAllDosen().execute();
+        //System.out.println(execute.body());
     }
 }

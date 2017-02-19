@@ -45,10 +45,8 @@ public class CheckLocationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
         //code here
         doGetActiveLocation();
-
         return START_NOT_STICKY;
     }
 
