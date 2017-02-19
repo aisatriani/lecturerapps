@@ -16,6 +16,7 @@ public class LokasiDosen implements Serializable, Parcelable {
     private String nama;
     private double latitude;
     private double longitude;
+    private String kabkot;
     private int active;
     private String created_at;
     private String updated_at;
@@ -81,6 +82,14 @@ public class LokasiDosen implements Serializable, Parcelable {
 
     public void setLongitude(double longitude) {
         this.longitude = longitude;
+    }
+
+    public String getKabkot() {
+        return kabkot;
+    }
+
+    public void setKabkot(String kabkot) {
+        this.kabkot = kabkot;
     }
 
     public int getActive() {

@@ -13,6 +13,7 @@ import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.provider.BaseColumns;
 import android.support.design.widget.Snackbar;
@@ -50,13 +51,18 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.tenilodev.lecturermaps.api.ApiGenerator;
+import com.tenilodev.lecturermaps.api.ApiResponse;
+import com.tenilodev.lecturermaps.api.ApiSiatGenerator;
 import com.tenilodev.lecturermaps.api.ClientServices;
+import com.tenilodev.lecturermaps.api.SiatMethod;
 import com.tenilodev.lecturermaps.model.Dosen;
+import com.tenilodev.lecturermaps.model.DosenResponse;
 import com.tenilodev.lecturermaps.model.LokasiDosen;
 import com.tenilodev.lecturermaps.model.Mahasiswa;
 import com.tenilodev.lecturermaps.services.CheckLocationService;
 import com.tenilodev.lecturermaps.services.UpdateLocationService;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -86,6 +92,7 @@ public class MainActivity extends AppCompatActivity
             BaseColumns._ID,                         // necessary for adapter
             SearchManager.SUGGEST_COLUMN_TEXT_1};      // the full search term
     private HashMap<String, Marker> markerNama = new HashMap<>();
+    private Handler handler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,6 +102,8 @@ public class MainActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+
+        handler = new Handler();
 
 
         if (!Pref.getInstance(this).isLoginIn()) {
@@ -430,52 +439,82 @@ public class MainActivity extends AppCompatActivity
         //mMap.addMarker(new MarkerOptions().position(gorontalo).title("Marker in Sydney"));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(gorontalo, 14));
 
-        loadAllMarkerDosen();
+//        loadAllMarkerDosen();
+
+            loadAllDosenSiat();
     }
 
-    private void initMaps() {
+    private void loadAllDosenSiat() {
+        final ProgressDialog pd = new ProgressDialog(this);
+        pd.setMessage("Memuat data");
+        pd.setCanceledOnTouchOutside(false);
+        pd.show();
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_LOCATION_REQUEST_CODE);
-            return;
-        }
-
-        mMap.setMyLocationEnabled(true);
-
-        mMap.getUiSettings().setMyLocationButtonEnabled(true);
-        mMap.getUiSettings().setZoomControlsEnabled(true);
-        mMap.getUiSettings().setZoomGesturesEnabled(true);
-
-        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+        Thread thread = new Thread(new Runnable() {
             @Override
-            public boolean onMarkerClick(Marker marker) {
+            public void run() {
+                try {
 
-                if(markerLokasiDosen.containsKey(marker)){
-                    return false;
-                }
 
-                if(markerHashMap.size() > 0){
-                    for(Map.Entry<Dosen, Marker> entry : markerHashMap.entrySet()){
-                        if(entry.getValue().equals(marker)){
-                            //Toast.makeText(MainActivity.this, entry.getValue().getTitle(), Toast.LENGTH_SHORT).show();
-                            Intent intent = new Intent(MainActivity.this, DosenMapsActivity.class);
-                            intent.putExtra("dosen",entry.getKey());
-                            startActivity(intent);
+                    SiatMethod service = ApiSiatGenerator.createService(SiatMethod.class);
+                    Call<ApiResponse<List<DosenResponse>>> call = service.getAllDosen();
+                    Response<ApiResponse<List<DosenResponse>>> execute = call.execute();
+                    ApiResponse<List<DosenResponse>> body = execute.body();
+                    for(DosenResponse dosenResponse : body.getData()){
+                        final List<Dosen> data = dosenResponse.getDOSEN();
+                        for (int i = 0; i < data.size(); i++) {
+
+                            ClientServices serviceLokasi = ApiGenerator.createService(ClientServices.class);
+                            Call<LokasiDosen> lokasiDosenByNIDN = serviceLokasi.getLokasiDosenByNIDN(data.get(i).getNIDN());
+                            Response<LokasiDosen> lokasiDosenResponse = lokasiDosenByNIDN.execute();
+                            LokasiDosen lokasiDosen = lokasiDosenResponse.body();
+
+                            data.get(i).setLATITUDE(lokasiDosen.getLatitude());
+                            data.get(i).setLONGITUDE(lokasiDosen.getLongitude());
+
+                            mListDosen.add(data.get(i).getNAMA());
+
+                            final LatLng ll = new LatLng(data.get(i).getLATITUDE(), data.get(i).getLONGITUDE());
+
+                            final int finalI = i;
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Marker marker = mMap.addMarker(new MarkerOptions()
+                                            .position(ll)
+                                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.home))
+                                            .title(data.get(finalI).getNAMA()));
+
+                                    markerHashMap.put(data.get(finalI), marker);
+                                    markerNama.put(data.get(finalI).getNAMA(), marker);
+                                }
+                            });
+
+
+
+
+
+
                         }
                     }
-                }
 
-                return true;
+
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            pd.dismiss();
+                        }
+                    });
+
+                }catch (IOException e){
+                    e.printStackTrace();
+                }
             }
         });
+
+        thread.start();
+
+
 
 
     }
@@ -544,6 +583,55 @@ public class MainActivity extends AppCompatActivity
             }
         });
     }
+
+    private void initMaps() {
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_LOCATION_REQUEST_CODE);
+            return;
+        }
+
+        mMap.setMyLocationEnabled(true);
+
+        mMap.getUiSettings().setMyLocationButtonEnabled(true);
+        mMap.getUiSettings().setZoomControlsEnabled(true);
+        mMap.getUiSettings().setZoomGesturesEnabled(true);
+
+        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+
+                if(markerLokasiDosen.containsKey(marker)){
+                    return false;
+                }
+
+                if(markerHashMap.size() > 0){
+                    for(Map.Entry<Dosen, Marker> entry : markerHashMap.entrySet()){
+                        if(entry.getValue().equals(marker)){
+                            //Toast.makeText(MainActivity.this, entry.getValue().getTitle(), Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(MainActivity.this, DosenMapsActivity.class);
+                            intent.putExtra("dosen",entry.getKey());
+                            startActivity(intent);
+                        }
+                    }
+                }
+
+                return true;
+            }
+        });
+
+
+    }
+
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {

@@ -57,4 +57,7 @@ public interface ClientServices {
     @GET("/maps/api/directions/json")
     public Call<DirectionResults> getDirection(@Query("origin") String origin,@Query("destination") String destination);
 
+    @GET("dosen/{nidn}/lokasi")
+    public Call<LokasiDosen> getLokasiDosenByNIDN(@Path("nidn") String nidn);
+
 }

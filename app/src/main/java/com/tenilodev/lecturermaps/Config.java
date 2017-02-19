@@ -5,7 +5,7 @@ package com.tenilodev.lecturermaps;
  */
 
 public class Config {
-    public static final String BASE_URL = "http://wssiat.herokuapp.com";
+    public static final String BASE_URL = "http://wssiat.dev";
 
     public static final String DOMISILI_KOTA = "KOTA GORONTALO";
     public static final String DOMISILI_KAB = "KAB. GORONTALO";

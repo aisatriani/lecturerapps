@@ -1,6 +1,7 @@
 package com.tenilodev.lecturermaps.api;
 
 import com.tenilodev.lecturermaps.model.Dosen;
+import com.tenilodev.lecturermaps.model.DosenResponse;
 import com.tenilodev.lecturermaps.model.Mahasiswa;
 
 import java.util.List;
@@ -26,7 +27,7 @@ public interface SiatMethod {
     public Call<ApiResponse<Dosen>> loginDosen(@Query("nidn") String nim, @Query("pwd") String pwd);
 
     @GET("index.php?service=getalldosen")
-    public Call<ApiResponse<List<Dosen>>> getAllDosen();
+    public Call<ApiResponse<List<DosenResponse>>> getAllDosen();
 
 
 }
