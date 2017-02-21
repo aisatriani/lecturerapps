@@ -439,9 +439,76 @@ public class MainActivity extends AppCompatActivity
         //mMap.addMarker(new MarkerOptions().position(gorontalo).title("Marker in Sydney"));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(gorontalo, 14));
 
-//        loadAllMarkerDosen();
+        loadAllMarkerDosen();
 
-            loadAllDosenSiat();
+           // loadAllDosenSiat();
+            //loadAllDosenSiat2();
+    }
+
+    private void loadAllDosenSiat2() {
+        final ProgressDialog pd = new ProgressDialog(this);
+        pd.setMessage("Memuat data");
+        pd.setCanceledOnTouchOutside(false);
+        pd.show();
+
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+
+
+                    SiatMethod service = ApiSiatGenerator.createService(SiatMethod.class);
+                    Call<ApiResponse<List<DosenResponse>>> call = service.getAllDosen();
+                    Response<ApiResponse<List<DosenResponse>>> execute = call.execute();
+                    ApiResponse<List<DosenResponse>> body = execute.body();
+                    for(DosenResponse dosenResponse : body.getData()){
+                        final List<Dosen> data = dosenResponse.getDOSEN();
+                        for (int i = 0; i < data.size(); i++) {
+
+                            ClientServices serviceLokasi = ApiGenerator.createService(ClientServices.class);
+                            Call<LokasiDosen> lokasiDosenByNIDN = serviceLokasi.getLokasiDosenByNIDN(data.get(i).getNIDN());
+                            Response<LokasiDosen> lokasiDosenResponse = lokasiDosenByNIDN.execute();
+                            LokasiDosen lokasiDosen = lokasiDosenResponse.body();
+
+                            data.get(i).setLATITUDE(lokasiDosen.getLatitude());
+                            data.get(i).setLONGITUDE(lokasiDosen.getLongitude());
+
+                            mListDosen.add(data.get(i).getNAMA());
+
+                            final LatLng ll = new LatLng(data.get(i).getLATITUDE(), data.get(i).getLONGITUDE());
+
+                            final int finalI = i;
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Marker marker = mMap.addMarker(new MarkerOptions()
+                                            .position(ll)
+                                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.home))
+                                            .title(data.get(finalI).getNAMA()));
+
+                                    markerHashMap.put(data.get(finalI), marker);
+                                    markerNama.put(data.get(finalI).getNAMA(), marker);
+                                }
+                            });
+
+                        }
+                    }
+
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            pd.dismiss();
+                        }
+                    });
+
+                }catch (IOException e){
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        thread.start();
+
     }
 
     private void loadAllDosenSiat() {
@@ -490,11 +557,6 @@ public class MainActivity extends AppCompatActivity
                                 }
                             });
 
-
-
-
-
-
                         }
                     }
 
@@ -513,9 +575,6 @@ public class MainActivity extends AppCompatActivity
         });
 
         thread.start();
-
-
-
 
     }
 
