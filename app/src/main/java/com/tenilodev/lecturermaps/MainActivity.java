@@ -50,6 +50,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.tenilodev.lecturermaps.api.ApiGenerator;
 import com.tenilodev.lecturermaps.api.ApiResponse;
 import com.tenilodev.lecturermaps.api.ApiSiatGenerator;
@@ -63,6 +64,7 @@ import com.tenilodev.lecturermaps.services.CheckLocationService;
 import com.tenilodev.lecturermaps.services.UpdateLocationService;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -84,7 +86,7 @@ public class MainActivity extends AppCompatActivity
     private Dosen currentDosen;
     private SharedPreferences sharedPreferences;
     private BroadcastReceiver receiver;
-    private HashMap<Marker, String> markerLokasiDosen = new HashMap<>();
+    private HashMap<LokasiDosen, Marker> markerLokasiDosen = new HashMap<>();
     private SearchView searchView;
     private List<String> mListDosen = new ArrayList<>();
 
@@ -114,6 +116,8 @@ public class MainActivity extends AppCompatActivity
         }
 
         checkStateLogin();
+
+        FirebaseMessaging.getInstance().subscribeToTopic("news");
 
         currentMahasiswa = Pref.getInstance(this).getDataMahasiswa();
         currentDosen = Pref.getInstance(this).getDataDosen();
@@ -147,7 +151,7 @@ public class MainActivity extends AppCompatActivity
                                 .position(new LatLng(ldosen.getLatitude(), ldosen.getLongitude()))
                         );
 
-                    markerLokasiDosen.put(dosenMarker, ldosen.getNidn());
+                    markerLokasiDosen.put(ldosen, dosenMarker);
                 }
             }
         };
@@ -156,10 +160,10 @@ public class MainActivity extends AppCompatActivity
     private void removeActiveMarker() {
 
         if(markerLokasiDosen.size() > 0)
-            for(Marker marker : markerLokasiDosen.keySet()){
-                marker.remove();
-                System.out.println("remove active marker");
-            }
+        for(Map.Entry<LokasiDosen, Marker> entry : markerLokasiDosen.entrySet()){
+            entry.getValue().remove();
+        }
+
     }
 
     @Override
@@ -194,10 +198,12 @@ public class MainActivity extends AppCompatActivity
                 stopService(new Intent(this, UpdateLocationService.class));
                 doDisableUpdateLocation();
             }
+            FirebaseMessaging.getInstance().subscribeToTopic(Pref.getInstance(this).getDataDosen().getNIDN());
         }
 
         if(state == Config.LOGIN_STATE_MAHASISWA){
             startService(new Intent(this, CheckLocationService.class));
+            FirebaseMessaging.getInstance().subscribeToTopic(Pref.getInstance(this).getNim());
         }
     }
 
@@ -420,17 +426,21 @@ public class MainActivity extends AppCompatActivity
             Pref.getInstance(MainActivity.this).setLoginIn(false);
             sharedPreferences.edit().putBoolean("location_switch", false).apply();
             stopService(new Intent(this, CheckLocationService.class));
+            FirebaseMessaging.getInstance().unsubscribeFromTopic(Pref.getInstance(this).getNim());
             finish();
             startActivity(getIntent());
         }
         if(Pref.getInstance(this).getLoginState() == Config.LOGIN_STATE_DOSEN) {
             doDisableUpdateLocationLogout();
+            FirebaseMessaging.getInstance().unsubscribeFromTopic(Pref.getInstance(this).getDataDosen().getNIDN());
         }
     }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+
+        //testMarkerLokasiDosen();
 
         initMaps();
 
@@ -439,10 +449,28 @@ public class MainActivity extends AppCompatActivity
         //mMap.addMarker(new MarkerOptions().position(gorontalo).title("Marker in Sydney"));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(gorontalo, 14));
 
-        loadAllMarkerDosen();
+        //loadAllMarkerDosen();
 
            // loadAllDosenSiat();
             //loadAllDosenSiat2();
+    }
+
+    private void testMarkerLokasiDosen() {
+        LokasiDosen lokasiDosen = new LokasiDosen();
+        lokasiDosen.setId(123);
+        lokasiDosen.setLatitude(0.549008);
+        lokasiDosen.setLongitude(123.084351);
+        lokasiDosen.setNidn("0008127805");
+        lokasiDosen.setNama("Tajudin Abdillah");
+
+        Marker markerss = mMap.addMarker(new MarkerOptions()
+                 .position(new LatLng(lokasiDosen.getLatitude(),lokasiDosen.getLongitude()))
+                .title(lokasiDosen.getNama())
+                .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker_dosen))
+        );
+
+        markerLokasiDosen.put(lokasiDosen, markerss);
+
     }
 
     private void loadAllDosenSiat2() {
@@ -668,9 +696,18 @@ public class MainActivity extends AppCompatActivity
             @Override
             public boolean onMarkerClick(Marker marker) {
 
-                if(markerLokasiDosen.containsKey(marker)){
-                    return false;
-                }
+                if(markerLokasiDosen.size() > 0)
+                //if(markerLokasiDosen.containsKey(marker)){
+                    for(Map.Entry<LokasiDosen, Marker> entry : markerLokasiDosen.entrySet()){
+                        if(entry.getValue().equals(marker)){
+                            //Toast.makeText(MainActivity.this, entry.getValue().getTitle(), Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(MainActivity.this, ChatingActivity.class);
+                            intent.putExtra("lokasidosen", (Serializable) entry.getKey());
+                            startActivity(intent);
+                            System.out.println("marker lokasi dosen click");
+                        }
+                    }
+
 
                 if(markerHashMap.size() > 0){
                     for(Map.Entry<Dosen, Marker> entry : markerHashMap.entrySet()){

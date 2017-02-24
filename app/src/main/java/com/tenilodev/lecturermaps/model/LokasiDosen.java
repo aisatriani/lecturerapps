@@ -21,6 +21,10 @@ public class LokasiDosen implements Serializable, Parcelable {
     private String created_at;
     private String updated_at;
 
+    public LokasiDosen(){
+
+    }
+
     protected LokasiDosen(Parcel in) {
         id = in.readInt();
         nidn = in.readString();

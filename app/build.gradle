@@ -24,7 +24,7 @@ android {
             // All the usual Gradle options.
             testLogging {
                 events "passed", "skipped", "failed", "standardOut", "standardError"
-                outputs.upToDateWhen {false}
+                outputs.upToDateWhen { false }
                 showStandardStreams = true
             }
         }
@@ -53,6 +53,14 @@ dependencies {
     compile 'com.google.android.gms:play-services-location:10.0.1'
     compile 'com.android.support:support-v4:24.2.1'
     compile 'com.android.support:support-vector-drawable:24.2.1'
-    testCompile 'junit:junit:4.12'
     compile 'com.google.guava:guava-collections:r03'
+    compile 'com.google.firebase:firebase-core:10.0.1'
+    compile 'com.google.firebase:firebase-database:10.0.1'
+    compile 'com.google.firebase:firebase-messaging:10.0.1'
+    testCompile 'junit:junit:4.12'
+    compile 'com.firebaseui:firebase-ui-database:1.1.1'
+
 }
+
+
+apply plugin: 'com.google.gms.google-services'

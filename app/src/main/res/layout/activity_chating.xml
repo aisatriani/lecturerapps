@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_chating"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.tenilodev.lecturermaps.ChatingActivity">
+
+    <android.support.v7.widget.RecyclerView
+        android:layout_above="@+id/msg_box"
+        android:id="@+id/rv_chat"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+
+    <LinearLayout
+        android:id="@+id/msg_box"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <EditText
+            android:id="@+id/text_pesan"
+            android:background="@android:drawable/edit_text"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:hint="Kirim pesan"/>
+
+        <Button
+            android:id="@+id/kirim_pesan"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Kirim"/>
+    </LinearLayout>
+
+</RelativeLayout>
