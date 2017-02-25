@@ -5,6 +5,7 @@ import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -24,6 +25,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.SimpleCursorAdapter;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
 import android.view.View;
@@ -698,13 +700,31 @@ public class MainActivity extends AppCompatActivity
 
                 if(markerLokasiDosen.size() > 0)
                 //if(markerLokasiDosen.containsKey(marker)){
-                    for(Map.Entry<LokasiDosen, Marker> entry : markerLokasiDosen.entrySet()){
+                    for(final Map.Entry<LokasiDosen, Marker> entry : markerLokasiDosen.entrySet()){
                         if(entry.getValue().equals(marker)){
-                            //Toast.makeText(MainActivity.this, entry.getValue().getTitle(), Toast.LENGTH_SHORT).show();
-                            Intent intent = new Intent(MainActivity.this, ChatingActivity.class);
-                            intent.putExtra("lokasidosen", (Serializable) entry.getKey());
-                            startActivity(intent);
-                            System.out.println("marker lokasi dosen click");
+
+                            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                            builder.setTitle(entry.getKey().getNama());
+                            builder.setMessage("Chating dengan dosen");
+                            builder.setPositiveButton("YA", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    Intent intent = new Intent(MainActivity.this, ChatingActivity.class);
+                                    intent.putExtra("lokasidosen", (Serializable) entry.getKey());
+                                    startActivity(intent);
+                                    System.out.println("marker lokasi dosen click");
+                                }
+                            });
+                            builder.setNegativeButton("BATAL", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+
+                                }
+                            });
+
+                            builder.create().show();
+
+
                         }
                     }
 

@@ -54,7 +54,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // Check if message contains a data payload.
         if (remoteMessage.getData().size() > 0) {
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
-
+            String body = remoteMessage.getData().get("body");
+            Gson gson = new Gson();
+            ChatMessage chatMessage = gson.fromJson(body, ChatMessage.class);
+            sendNotification(chatMessage.getMessageUser(), chatMessage.getMessageText(), chatMessage);
 
         }
 
