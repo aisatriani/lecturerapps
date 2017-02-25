@@ -451,10 +451,8 @@ public class MainActivity extends AppCompatActivity
         //mMap.addMarker(new MarkerOptions().position(gorontalo).title("Marker in Sydney"));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(gorontalo, 14));
 
-        //loadAllMarkerDosen();
+        loadAllMarkerDosen();
 
-           // loadAllDosenSiat();
-            //loadAllDosenSiat2();
     }
 
     private void testMarkerLokasiDosen() {
